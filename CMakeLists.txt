@@ -25,6 +25,7 @@ add_library(eacirc-core STATIC
 
 add_subdirectory(external/json)
 add_subdirectory(external/pcg-cpp-0.98)
+add_subdirectory(external/googletest)
 
 target_include_directories(eacirc-core INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..
