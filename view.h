@@ -12,6 +12,7 @@ template <typename Iterator> struct view {
     using value_type = typename std::iterator_traits<Iterator>::value_type;
     using difference_type = typename std::iterator_traits<Iterator>::difference_type;
     using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
+    using iterator = Iterator;
 
     template <typename> friend struct view_iterator;
 
@@ -45,6 +46,10 @@ template <typename Iterator> struct view {
 
     pointer data() {
         return &(*_beg);
+    }
+
+    friend bool operator==(const view& lhs, const view& rhs) {
+        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 
 private:
