@@ -20,7 +20,6 @@ add_library(eacirc-core STATIC
     iterators
     json
     logger
-    memory
     optional
     random
     seed
