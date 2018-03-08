@@ -3,7 +3,7 @@
 #include <iostream>
 
 std::ostream& logger::out() {
-    return std::cout << logger::time() << " ";
+    return std::cerr << logger::time() << " ";
 }
 
 std::string logger::date() {
