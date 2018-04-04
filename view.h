@@ -2,9 +2,10 @@
 
 #include "debug.h"
 #include <iterator>
+#include <vector>
 
 /**
- * @brief an iterator interval [beg, end) wich is acting as container, but it does not owns any data
+ * @brief an iterator interval [beg, end) wich is acting as container, but it does not own any data
  */
 template <typename Iterator> struct view {
     using pointer = typename std::iterator_traits<Iterator>::pointer;
@@ -44,8 +45,12 @@ template <typename Iterator> struct view {
         return {std::next(_beg, n), _end};
     }
 
-    pointer data() {
+    pointer data() const {
         return &(*_beg);
+    }
+
+    std::vector<value_type> copy_to_vector() const {
+        return std::vector<value_type>(_beg, _end);
     }
 
     friend bool operator==(const view& lhs, const view& rhs) {
