@@ -45,6 +45,10 @@ template <typename Iterator> struct view {
         return {std::next(_beg, n), _end};
     }
 
+    reference operator[](int idx) {
+        return *(_beg + idx);
+    }
+
     pointer data() const {
         return &(*_beg);
     }
