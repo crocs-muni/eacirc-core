@@ -1,3 +1,8 @@
+## Eacirc changes
+
+- https://github.com/imneme/pcg-cpp
+- 5b5cac8d61339e810c5dbb4692d868a1d7ca1b2d
+
 # PCG Random Number Generation, C++ Edition
 
 [PCG-Random website]: http://www.pcg-random.org
