@@ -482,22 +482,31 @@ public:
     }
 
     engine(itype state = itype(0xcafef00dd15ea5e5ULL))
-        : state_(this->is_mcg ? state|state_type(3U)
-                              : bump(state + this->increment()))
     {
-        // Nothing else to do.
+        engine_init(state);
     }
 
     // This function may or may not exist.  It thus has to be a template
     // to use SFINAE; users don't have to worry about its template-ness.
 
     template <typename sm = stream_mixin>
-    engine(itype state, typename sm::stream_state stream_seed)
-        : stream_mixin(stream_seed),
-          state_(this->is_mcg ? state|state_type(3U)
-                              : bump(state + this->increment()))
+    engine(typename sm::stream_state stream_seed, bool unused)
+        : stream_mixin(stream_seed)
     {
+        (void)unused;
         // Nothing else to do.
+    }
+
+    template <typename sm = stream_mixin>
+    engine(itype state, typename sm::stream_state stream_seed)
+        : stream_mixin(stream_seed)
+    {
+        engine_init(state);
+    }
+
+    void engine_init(itype state) {
+        state_ = (this->is_mcg ? state|state_type(3U)
+                            : bump(state + this->increment()));
     }
 
     template<typename SeedSeq>
@@ -512,15 +521,14 @@ public:
     }
 
     template<typename SeedSeq>
-    engine(SeedSeq&& seedSeq, typename std::enable_if<
+    explicit engine(SeedSeq&& seedSeq, typename std::enable_if<
                    stream_mixin::can_specify_stream
                && !std::is_convertible<SeedSeq, itype>::value
                && !std::is_convertible<SeedSeq, engine>::value,
         can_specify_stream_tag>::type = {})
-        : engine(generate_one<itype,1,2>(seedSeq),
-                 generate_one<itype,0,2>(seedSeq))
+        : engine(generate_one<itype,0,2>(seedSeq), false)
     {
-        // Nothing else to do.
+        engine_init(generate_one<itype,1,2>(seedSeq));
     }
 
 
