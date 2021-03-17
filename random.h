@@ -6,6 +6,20 @@
 #include <random>
 #include <utility>
 
+#ifdef PORTABLE_RANDOMNESS
+#include <boost/random/uniform_int_distribution.hpp>
+#endif
+
+namespace eacirc {
+template <typename IntType = uint32_t>
+using uniform_int_distribution =
+#ifdef PORTABLE_RANDOMNESS
+boost::random::uniform_int_distribution<IntType>;
+#else
+std::uniform_int_distribution<IntType>;
+#endif
+}
+
 template <typename Generator> struct seed_seq_from {
   using result_type = std::uint_least32_t;
 
@@ -51,9 +65,9 @@ struct polymorphic_generator {
   result_type operator()() {
     switch (_rng.index()) {
     case decltype(_rng)::index_of<std::mt19937>():
-      return std::uniform_int_distribution<result_type>()(_rng.as<std::mt19937>());
+      return eacirc::uniform_int_distribution<result_type>()(_rng.as<std::mt19937>());
     case decltype(_rng)::index_of<pcg32>():
-      return std::uniform_int_distribution<result_type>()(_rng.as<pcg32>());
+      return eacirc::uniform_int_distribution<result_type>()(_rng.as<pcg32>());
     }
 
     throw std::logic_error("canot call polymorphic generator with undefined generator");

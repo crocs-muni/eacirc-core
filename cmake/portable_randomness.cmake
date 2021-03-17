@@ -1,0 +1,31 @@
+option(BOOST_IGNORE_SYSTEM_PATHS "Ignore boost system paths for local boost installation" OFF)
+option(PORTABLE_RANDOMNESS "Build reproducible random generator, requires boost::random" ON)
+
+if (NOT DEFINED EXTRA_LIBRARIES)
+    set(EXTRA_LIBRARIES "")
+endif()
+
+if (NOT DEFINED STATIC)
+    set(STATIC ON)
+endif()
+
+if(STATIC)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_STATIC_RUNTIME ON)
+endif()
+
+if(PORTABLE_RANDOMNESS)
+    set(Boost_NO_BOOST_CMAKE ON)
+    find_package(Boost 1.53 QUIET REQUIRED COMPONENTS random)
+    if(NOT Boost_FOUND)
+        message(FATAL_ERROR "Could not find Boost libraries, please make sure you have installed Boost or libboost-random-dev (>=1.58) or the equivalent")
+    elseif(Boost_FOUND)
+        message(STATUS "Found Boost Version: ${Boost_VERSION}")
+    endif()
+
+    add_definitions(-DPORTABLE_RANDOMNESS=1)
+    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+    list(APPEND EXTRA_LIBRARIES ${Boost_RANDOM_LIBRARY})
+else()
+    message(WARNING "Building without portable randomness generators. Program can return various results for different platforms and compilers (e.g., GNU vs. Clang)")
+endif()

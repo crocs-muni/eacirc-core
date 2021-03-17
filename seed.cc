@@ -1,4 +1,5 @@
 #include "seed.h"
+#include "random.h"
 #include <ios>
 #include <random>
 #include <sstream>
@@ -6,11 +7,11 @@
 template <typename Type, typename Generator>
 static auto generate_one(Generator&& gen) ->
         typename std::enable_if<std::is_unsigned<Type>::value, Type>::type {
-    return std::uniform_int_distribution<Type>()(gen);
+    return eacirc::uniform_int_distribution<Type>()(gen);
 }
 
 template <typename Type>
-static auto from_hex(std::string str) ->
+static auto from_hex(const std::string & str) ->
         typename std::enable_if<std::is_unsigned<Type>::value, Type>::type {
     std::istringstream in(str);
 
@@ -39,7 +40,7 @@ static auto to_hex(Type value) ->
 seed::seed(std::nullptr_t)
     : _value(generate_one<value_type>(std::random_device())) {}
 
-seed::seed(std::string str)
+seed::seed(const std::string & str)
     : _value(from_hex<value_type>(str)) {}
 
 seed::operator std::string() const {
