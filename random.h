@@ -20,6 +20,11 @@ std::uniform_int_distribution<IntType>;
 #endif
 }
 
+// Seeding multiple different generators
+// Behaves differently than std:seed_seq (which returns same data for
+// same length inputs in generate())
+// https://en.cppreference.com/w/cpp/numeric/random/seed_seq
+// https://en.cppreference.com/w/cpp/named_req/SeedSequence
 template <typename Generator> struct seed_seq_from {
   using result_type = std::uint_least32_t;
 
@@ -46,6 +51,77 @@ private:
   Generator _rng;
 };
 
+// std::seed_seq behaviour, only for seeding one generator, created from Seeder randomness
+template <typename Seeder, size_t seed_count=10> struct seed_seq_rng {
+    using result_type = std::uint_least32_t;
+
+    template <typename... Args>
+    explicit seed_seq_rng(Seeder&& seeder){
+        for(size_t i=0; i<seed_count; ++i){
+            _seeds[i] = result_type(seeder());
+        }
+        _seeder = std::make_unique<std::seed_seq>(_seeds);
+    }
+
+    seed_seq_rng(seed_seq_rng const&) = delete;
+    seed_seq_rng& operator=(seed_seq_rng const&) = delete;
+
+    template <typename I> void generate(I beg, I end) {
+        _seeder->generate(beg, end);
+    }
+
+    constexpr std::size_t size() const {
+        return seed_count;
+    }
+
+private:
+    std::unique_ptr<std::seed_seq> _seeder;
+    result_type _seeds[seed_count]{};
+};
+
+// Backward-compatible PCG32 seeding (with older experiments, compiled with GNU GCC)
+// Only for seeding one instance of PCG32 generator from another seeder
+template <typename Seeder, size_t seed_count=8> struct seed_seq_pcg32 {
+    using result_type = std::uint_least32_t;
+    const size_t num_values = seed_count;
+
+    template <typename... Args>
+    explicit seed_seq_pcg32(Seeder&& seeder){
+        seeder.generate(_seeds, _seeds + num_values);
+    }
+
+    seed_seq_pcg32(seed_seq_pcg32 const&) = delete;
+    seed_seq_pcg32& operator=(seed_seq_pcg32 const&) = delete;
+
+    template <typename I> void generate(I beg, I end) {
+        // backward compatibility with old PCG with non-portable seeding from non-compliant
+        // generator (compliant = reentrant) https://github.com/imneme/pcg-cpp/issues/67
+        // Generates the same seeding sequence as older eacirc-core versions compiled with GNU GCC.
+        // Originally, generator was seeded with [x0, x3] from [x0, x1, x2, x3]
+        if ((end - beg) != 4) {
+            throw std::runtime_error("Invalid use, intended only for seeding PCG32 generators");
+        }
+        if (use_count > 1) {
+            throw std::runtime_error("Invalid use, intended only for one-time seeding");
+        }
+
+        *beg = _seeds[0];
+        *(beg + 1) = _seeds[1];
+        *(beg + 2) = _seeds[6];
+        *(beg + 3) = _seeds[7];
+        use_count += 1;
+    }
+
+    constexpr std::size_t size() const {
+        return seed_count;
+    }
+
+private:
+    result_type _seeds[seed_count]{};
+    unsigned use_count = 0;
+};
+
+
 struct polymorphic_generator {
   using result_type = std::uint8_t;
 
@@ -70,7 +146,7 @@ struct polymorphic_generator {
       return eacirc::uniform_int_distribution<result_type>()(_rng.as<pcg32>());
     }
 
-    throw std::logic_error("canot call polymorphic generator with undefined generator");
+    throw std::logic_error("cannot call polymorphic generator with undefined generator");
   }
 
 private:
