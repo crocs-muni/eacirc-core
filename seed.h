@@ -8,7 +8,7 @@ struct seed {
     using value_type = std::uint64_t;
 
     explicit seed(std::nullptr_t);
-    explicit seed(std::string const str);
+    explicit seed(const std::string & str);
 
     static seed create(json const& object) {
         if (object.is_null())
