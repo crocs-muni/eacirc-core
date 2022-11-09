@@ -5,6 +5,7 @@
 #include <pcg/pcg_random.hpp>
 #include <random>
 #include <utility>
+#include <memory>
 
 #ifdef PORTABLE_RANDOMNESS
 #include <boost/random/uniform_int_distribution.hpp>
